@@ -1,4 +1,3 @@
-//Första inlämningen bla bla
 import 'package:flutter/material.dart';
 
 //Mainfunktionen returnerar MyApp
