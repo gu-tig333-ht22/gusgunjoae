@@ -5,6 +5,8 @@ void main() {
   runApp(const MyApp());
 }
 
+bool todoValue = false; //Booleansk variabel, använda för checkbox?
+
 //"Bas" för applikationen.
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
@@ -39,49 +41,40 @@ class TodoItem extends StatelessWidget {
   final Todo todo;
   final onTodoChanged;
 
-  TextStyle? _getTextStyle(bool checked) {
-    if (!checked) return null;
-
-    return TextStyle(
-      color: Colors.black54,
-      decoration: TextDecoration.lineThrough,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return CheckboxListTile(
+        title: Text(todo.name),
         controlAffinity: ListTileControlAffinity.leading,
         secondary: const Icon(Icons.close),
-        title: Text(todo.name, style: _getTextStyle(todo.checked)),
-        value: false,
+        value: todoValue,
         onChanged: (bool? newValue) {
-          //setState(() {
-          // = newValue;
+          onTodoChanged(todo);
         });
   }
 }
 
+//Returneras till MyApp
 class Todolist extends StatefulWidget {
   const Todolist({super.key});
 
   @override
-  State<Todolist> createState() => new _TodolistState();
+  State<Todolist> createState() => _TodolistState();
 }
 
-//Skapar
+//Skapar State
 class _TodolistState extends State<Todolist> {
   final TextEditingController _textFieldController = TextEditingController();
   final List<Todo> _todos = <Todo>[];
 
   @override
   Widget build(BuildContext context) {
-    return new Scaffold(
-      appBar: new AppBar(
-        title: new Text('TIG333: To-Do'),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('TIG333: To-Do'),
       ),
       body: ListView(
-        padding: EdgeInsets.symmetric(vertical: 12.0),
+        padding: const EdgeInsets.symmetric(vertical: 12.0),
         children: _todos.map((Todo todo) {
           return TodoItem(
             todo: todo,
@@ -92,14 +85,15 @@ class _TodolistState extends State<Todolist> {
       floatingActionButton: FloatingActionButton(
           onPressed: () => _displayDialog(),
           tooltip: 'Lägg Till',
-          child: Icon(Icons.add)),
+          child: const Icon(Icons.add)),
     );
   }
 
+//Pop-up ruta
   Future<void> _displayDialog() async {
     return showDialog<void>(
       context: context,
-      barrierDismissible: false, // user must tap button!
+      barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Lägg till saker att göra'),
@@ -128,9 +122,11 @@ class _TodolistState extends State<Todolist> {
     _textFieldController.clear();
   }
 
+//Streck över to-do texten i listan
   void _handleTodoChange(Todo todo) {
     setState(() {
-      todo.checked = !todo.checked;
+      todoValue = !todoValue;
+      //todo.checked = !todo.checked; // Möjligt fel här, använder den globala variabeln todoValue.
     });
   }
 }
