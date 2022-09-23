@@ -1,132 +1,147 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-//Mainfunktionen returnerar MyApp
+import 'NewView.dart';
+import 'ToDos.dart';
+import 'MyState.dart';
+
 void main() {
-  runApp(const MyApp());
+  var state = MyState();
+
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => state,
+      child: const MyApp(),
+    ),
+  );
 }
 
-bool todoValue = false; //Booleansk variabel, använda för checkbox?
-
-//"Bas" för applikationen.
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
-
-  // This widget is the root of your application. Ger titel, temafärg och returnerar Todolist-widgeten.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'TIG333 To-Do',
+      debugShowCheckedModeBanner: false,
+      title: 'To-do List',
       theme: ThemeData(
-        primarySwatch: Colors.red,
+        primarySwatch: Colors.blueGrey,
       ),
-      home: const Todolist(),
+      home: const HomeView(),
     );
   }
 }
 
-//To-Do defineras (vad det ska innehålla)
-class Todo {
-  Todo({required this.name, required this.checked});
-  final String name;
-  bool checked;
-}
-
-//To Do Item, varje enskild att-göra sak
-class TodoItem extends StatelessWidget {
-  TodoItem({
-    required this.todo,
-    required this.onTodoChanged,
-  }) : super(key: ObjectKey(todo));
-
-  final Todo todo;
-  final onTodoChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return CheckboxListTile(
-        title: Text(todo.name),
-        controlAffinity: ListTileControlAffinity.leading,
-        secondary: const Icon(Icons.close),
-        value: todoValue,
-        onChanged: (bool? newValue) {
-          onTodoChanged(todo);
-        });
-  }
-}
-
-//Returneras till MyApp
-class Todolist extends StatefulWidget {
-  const Todolist({super.key});
-
-  @override
-  State<Todolist> createState() => _TodolistState();
-}
-
-//Skapar State
-class _TodolistState extends State<Todolist> {
-  final TextEditingController _textFieldController = TextEditingController();
-  final List<Todo> _todos = <Todo>[];
-
+//Homeview
+class HomeView extends StatelessWidget {
+  const HomeView({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('TIG333: To-Do'),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(vertical: 12.0),
-        children: _todos.map((Todo todo) {
-          return TodoItem(
-            todo: todo,
-            onTodoChanged: _handleTodoChange,
-          );
-        }).toList(),
-      ),
-      floatingActionButton: FloatingActionButton(
-          onPressed: () => _displayDialog(),
-          tooltip: 'Lägg Till',
-          child: const Icon(Icons.add)),
-    );
-  }
-
-//Pop-up ruta
-  Future<void> _displayDialog() async {
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Lägg till saker att göra'),
-          content: TextField(
-            controller: _textFieldController,
-            decoration: const InputDecoration(hintText: 'Skriv Här'),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Lägg Till'),
-              onPressed: () {
-                Navigator.of(context).pop();
-                _addTodoItem(_textFieldController.text);
-              },
+        centerTitle: true,
+        title: const Text("TIG333 To-Do"),
+        actions: [
+          Consumer<MyState>(
+            builder: (context, state, child) => Row(
+              children: [
+                Text(
+                  state.filterBy,
+                  style: const TextStyle(fontSize: 18),
+                ),
+//Knapp för filtrering. Från julkortsappen
+                PopupMenuButton(
+                  onSelected: (value) =>
+                      Provider.of<MyState>(context, listen: false)
+                          .setFilterBy(value as String),
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(value: 'All', child: Text("All")),
+                    const PopupMenuItem(value: 'Done', child: Text("Done")),
+                    const PopupMenuItem(value: 'Undone', child: Text("Undone")),
+                  ],
+                )
+              ],
             ),
-          ],
-        );
-      },
+          )
+        ],
+      ),
+      body: Consumer<MyState>(builder: (context, state, child) {
+        return ToDoList(_filterList(state.list, state.filterBy));
+      }),
+// FloatingActionButton - plusknapp som leder till ny vy (newview) där man kan lägga till nya To-Dos
+      floatingActionButton: FloatingActionButton(
+        child: const Icon(Icons.add),
+        onPressed: () async {
+          var newItem = await Navigator.push(context,
+              MaterialPageRoute(builder: (context) => const NewView()));
+          if (newItem != null && newItem.todo != "") {
+            Provider.of<MyState>(context, listen: false).addToDo(newItem);
+          }
+        },
+      ),
+    );
+  }
+}
+
+//Meny för filtrering. Från julkortsappen.
+List<ToDos> _filterList(list, filterBy) {
+  if (filterBy == 'All') {
+    return list;
+  }
+  if (filterBy == 'Done') {
+    return list.where((item) => item.checked == true).toList();
+  }
+  if (filterBy == 'Undone') {
+    return list.where((item) => item.checked == false).toList();
+  }
+  return list;
+}
+
+//ToDoList - Våran lista av ToDos, tar in dem från ToDoItems
+class ToDoList extends StatelessWidget {
+  final List<ToDos> list;
+  ToDoList(this.list);
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.symmetric(vertical: 12.0),
+      children: list.map((item) => ToDoItems(context, item)).toList(),
     );
   }
 
-  void _addTodoItem(String name) {
-    setState(() {
-      _todos.add(Todo(name: name, checked: false));
-    });
-    _textFieldController.clear();
-  }
-
-//Streck över to-do texten i listan
-  void _handleTodoChange(Todo todo) {
-    setState(() {
-      todoValue = !todoValue;
-      //todo.checked = !todo.checked; // Möjligt fel här, använder den globala variabeln todoValue.
-    });
+  // ToDoItems - Represenationen av ToDoS i ToDoListan. Checkbox/Linethrough/Tabort-knapp
+  Widget ToDoItems(context, item) {
+    return Column(
+      children: [
+        ListTile(
+          leading: Checkbox(
+            value: item.checked,
+            onChanged: (value) {
+              Provider.of<MyState>(context, listen: false).setIsDone(item);
+            },
+          ),
+          title: Text(
+            item.todo,
+            style: item.checked
+                ? const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    decoration: TextDecoration.lineThrough,
+                    color: Colors.black)
+                : const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+          ),
+          trailing: IconButton(
+            icon: const Icon(Icons.delete_outline_sharp, size: 30),
+            onPressed: () {
+              Provider.of<MyState>(context, listen: false).RemoveToDo(item);
+            },
+          ),
+        ),
+        const Divider(height: 15, thickness: 2),
+      ],
+    );
   }
 }
