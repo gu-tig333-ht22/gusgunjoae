@@ -24,14 +24,14 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'To-do List',
       theme: ThemeData(
-        primarySwatch: Colors.blueGrey,
+        primarySwatch: Colors.deepPurple,
       ),
       home: const HomeView(),
     );
   }
 }
 
-//Homeview
+//Förstasidan
 class HomeView extends StatelessWidget {
   const HomeView({Key? key}) : super(key: key);
   @override
@@ -56,7 +56,8 @@ class HomeView extends StatelessWidget {
                   itemBuilder: (context) => [
                     const PopupMenuItem(value: 'All', child: Text("All")),
                     const PopupMenuItem(value: 'Done', child: Text("Done")),
-                    const PopupMenuItem(value: 'Undone', child: Text("Undone")),
+                    const PopupMenuItem(
+                        value: 'Not Done', child: Text("Not Done")),
                   ],
                 )
               ],
@@ -67,7 +68,7 @@ class HomeView extends StatelessWidget {
       body: Consumer<MyState>(builder: (context, state, child) {
         return ToDoList(_filterList(state.list, state.filterBy));
       }),
-// FloatingActionButton - plusknapp som leder till ny vy (newview) där man kan lägga till nya To-Dos
+// FloatingActionButton - knapp som leder till ny vy (newview) där man kan lägga till nya To-Dos
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.add),
         onPressed: () async {
@@ -82,24 +83,10 @@ class HomeView extends StatelessWidget {
   }
 }
 
-//Meny för filtrering. Från julkortsappen.
-List<ToDos> _filterList(list, filterBy) {
-  if (filterBy == 'All') {
-    return list;
-  }
-  if (filterBy == 'Done') {
-    return list.where((item) => item.checked == true).toList();
-  }
-  if (filterBy == 'Undone') {
-    return list.where((item) => item.checked == false).toList();
-  }
-  return list;
-}
-
-//ToDoList - Våran lista av ToDos, tar in dem från ToDoItems
+//ToDoList - Lista av ToDos, tar in dem från ToDoItems
 class ToDoList extends StatelessWidget {
   final List<ToDos> list;
-  ToDoList(this.list);
+  const ToDoList(this.list, {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -109,7 +96,7 @@ class ToDoList extends StatelessWidget {
     );
   }
 
-  // ToDoItems - Represenationen av ToDoS i ToDoListan. Checkbox/Linethrough/Tabort-knapp
+  // ToDoItems - Represenationen av ToDoS i ToDoListan. Checkbox/Linethrough/Text/Tabort-knapp
   Widget ToDoItems(context, item) {
     return Column(
       children: [
@@ -144,4 +131,18 @@ class ToDoList extends StatelessWidget {
       ],
     );
   }
+}
+
+//Filtreringsmeny.
+List<ToDos> _filterList(list, filterBy) {
+  if (filterBy == 'All') {
+    return list;
+  }
+  if (filterBy == 'Done') {
+    return list.where((item) => item.checked == true).toList();
+  }
+  if (filterBy == 'Not Done') {
+    return list.where((item) => item.checked == false).toList();
+  }
+  return list;
 }
