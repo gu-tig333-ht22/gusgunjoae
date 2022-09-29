@@ -7,7 +7,7 @@ import 'ToDos.dart';
 // MyState och ChaneNotifier, liknande Julkortsappen.
 
 class MyState extends ChangeNotifier {
-  List<ToDos> _list = [];
+  final List<ToDos> _list = [];
   String _filterBy = 'All';
 
   List<ToDos> get list => _list;
@@ -36,6 +36,18 @@ class MyState extends ChangeNotifier {
     notifyListeners();
   }
 
+// Möjligen lösning för null-call? Ta bort?
+  // void updateApiList(itemlist) {
+  //   _list.clear();
+  //   itemlist.forEach((object) {
+  //     _list.add(ToDos(
+  //         todo: object["title"] ?? "Invalid To-Do, remove from list.",
+  //         checked: object["done"] ?? false,
+  //         id: object["id"]));
+  //   });
+  //   notifyListeners();
+  // }
+
   void addToDo(ToDos item) async {
     http.Response answer = await http.post(Uri.parse('$homepage$key'),
         headers: {"Content-Type": "application/json"},
@@ -53,16 +65,18 @@ class MyState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setIsDone(ToDos item) async {
-    String id = item.id;
-    http.Response answer = await http.put(Uri.parse('$homepage/$id$key'));
-    List itemlist = jsonDecode(answer.body);
-    item.checked = !item.checked;
+  void setFilterBy(String filterBy) {
+    _filterBy = filterBy;
     notifyListeners();
   }
 
-  void setFilterBy(String filterBy) {
-    this._filterBy = filterBy;
+  void setIsDone(ToDos item) async {
+    String id = item.id;
+    http.Response answer = await http.put(Uri.parse('$homepage/$id$key'),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"title": item.todo, "done": !item.checked}));
+    List itemlist = jsonDecode(answer.body);
+    updateApiList(itemlist);
     notifyListeners();
   }
 }

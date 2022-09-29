@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'ToDos.dart';
 
+//Ny vy för att lägga till saker att göra i listan
+
 class NewView extends StatefulWidget {
   const NewView({super.key});
 
@@ -38,7 +40,7 @@ class NewViewState extends State<NewView> {
         decoration: const InputDecoration(
           enabledBorder: OutlineInputBorder(borderSide: BorderSide(width: 2)),
           labelText: "What are you planning to do?",
-          labelStyle: TextStyle(fontSize: 18),
+          labelStyle: TextStyle(fontSize: 26),
         ),
       ),
     );
@@ -48,17 +50,22 @@ class NewViewState extends State<NewView> {
     return Row(mainAxisAlignment: MainAxisAlignment.center, children: [
       OutlinedButton(
           onPressed: () {
-            Navigator.pop(context,
-                ToDos(todo: textController.text, checked: false, id: ''));
+            if (textController.text.isEmpty) {
+              return;
+            } else {
+              Navigator.pop(context,
+                  ToDos(todo: textController.text, checked: false, id: ''));
+            }
           },
-          style: OutlinedButton.styleFrom(
-              side: const BorderSide(width: 2, color: Colors.black)),
+          style: ElevatedButton.styleFrom(
+              side: const BorderSide(width: 2, color: Colors.deepPurple),
+              padding: const EdgeInsets.all(10.0)),
           child: const Text(
             "+ Add To List",
             style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.normal,
-                color: Colors.black),
+                color: Colors.deepPurple),
           )),
     ]);
   }
