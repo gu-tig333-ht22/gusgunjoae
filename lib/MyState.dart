@@ -4,7 +4,7 @@ import 'dart:convert';
 
 import 'ToDos.dart';
 
-// MyState och ChaneNotifier, liknande Julkortsappen.
+// MyState/ChangeNotifier
 
 class MyState extends ChangeNotifier {
   final List<ToDos> _list = [];
@@ -24,7 +24,6 @@ class MyState extends ChangeNotifier {
     http.Response answer = await http.get(Uri.parse('$homepage$key'));
     List itemlist = jsonDecode(answer.body);
     updateApiList(itemlist);
-    //print(_list); - För att felsöka och se output. Ta bort!
   }
 
   void updateApiList(itemlist) {
@@ -35,18 +34,6 @@ class MyState extends ChangeNotifier {
     });
     notifyListeners();
   }
-
-// Möjligen lösning för null-call? Ta bort?
-  // void updateApiList(itemlist) {
-  //   _list.clear();
-  //   itemlist.forEach((object) {
-  //     _list.add(ToDos(
-  //         todo: object["title"] ?? "Invalid To-Do, remove from list.",
-  //         checked: object["done"] ?? false,
-  //         id: object["id"]));
-  //   });
-  //   notifyListeners();
-  // }
 
   void addToDo(ToDos item) async {
     http.Response answer = await http.post(Uri.parse('$homepage$key'),
